@@ -1,0 +1,155 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Go Fishing Hub",
+   Icon = 0, -- Icon in Topbar. Can use Lucide Icons (string) or Roblox Image (number). 0 to use no icon (default).
+   LoadingTitle = "Go Fishing Script",
+   LoadingSubtitle = "by ipatawsaga",
+   Theme = "Default", -- Check https://docs.sirius.menu/rayfield/configuration/themes
+
+   DisableRayfieldPrompts = false,
+   DisableBuildWarnings = false, -- Prevents Rayfield from warning when the script has a version mismatch with the interface
+
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "Big Hub"
+   },
+
+   Discord = {
+      Enabled = false, -- Prompt the user to join your Discord server if their executor supports it
+      Invite = "noinvitelink", -- The Discord invite code, do not include discord.gg/. E.g. discord.gg/ABCD would be ABCD
+      RememberJoins = true -- Set this to false to make them join the discord every time they load it up
+   },
+
+   KeySystem = false, -- Set this to true to use our key system
+   KeySettings = {
+      Title = "Go Fishing Key",
+      Subtitle = "Key System",
+      Note = "Copy the link to get key", -- Use this to tell the user how to get a key
+      FileName = "Key", -- It is recommended to use something unique as other scripts using Rayfield may overwrite your key file
+      SaveKey = true, -- The user's key will be saved, but if you change the key, they will be unable to use your script
+      GrabKeyFromSite = true, -- If this is true, set Key below to the RAW site you would like Rayfield to get the key from
+      Key = {"https://pastebin.com/raw/BgiRA0gq"} -- List of keys that will be accepted by the system, can be RAW file links (pastebin, github etc) or simple strings ("hello","key22")
+   }
+})
+
+local Tab = Window:CreateTab("Main", 4483362458) -- Title, Image
+
+local Toggle = Tab:CreateToggle({
+   Name = "Auto Fish",
+   CurrentValue = false, -- Starts as OFF
+   Flag = "Toggle1", -- Identifier for saving configuration
+   Callback = function(Value)
+       local player = game:GetService("Players").LocalPlayer
+       if player:FindFirstChild("gui") and player.gui:FindFirstChild("autofishing") then
+           -- Toggle the autofishing value based on the toggle state
+           player.gui.autofishing.Value = Value
+           if Value then
+               print("Auto Fishing is now ON")
+           else
+               print("Auto Fishing is now OFF")
+           end
+       else
+           warn("Auto fishing property not found! Ensure the 'autofishing' Value is correctly set up in the player's GUI.")
+       end
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "Sell all (Fish)",
+   Callback = function()
+game:GetService("ReplicatedStorage"):WaitForChild("events"):WaitForChild("fishing"):WaitForChild("sellAllFishes"):InvokeServer()
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "+Luck (UPGRADE)",
+   Callback = function()
+   local args = {
+    [1] = "luckBoost"
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("events"):WaitForChild("fishing"):WaitForChild("canPurchaseUpgrade"):InvokeServer(unpack(args))
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "+Strength (UPGRADE)",
+   Callback = function()
+   local args = {
+    [1] = "powerBoost"
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("events"):WaitForChild("fishing"):WaitForChild("canPurchaseUpgrade"):InvokeServer(unpack(args))
+   end,
+})
+
+local Button = Tab:CreateButton({
+   Name = "+FishingSpeed (UPGRADE)",
+   Callback = function()
+   local args = {
+    [1] = "speedBoost"
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("events"):WaitForChild("fishing"):WaitForChild("canPurchaseUpgrade"):InvokeServer(unpack(args))
+   end,
+})
+
+local Tab = Window:CreateTab("Settings", 4483362458) -- Title, Image
+
+local TeleportService = game:GetService("TeleportService")
+local Player = game.Players.LocalPlayer
+
+local autoRejoinEnabled = false
+
+local Toggle = Tab:CreateToggle({
+   Name = "Auto Rejoin",
+   CurrentValue = false,
+   Flag = "AutoRejoin", -- A unique identifier for saving toggle state
+   Callback = function(Value)
+      autoRejoinEnabled = Value
+      if autoRejoinEnabled then
+         print("Auto Rejoin Enabled")
+      else
+         print("Auto Rejoin Disabled")
+      end
+   end,
+})
+
+-- Monitor for disconnections
+Player.OnTeleport:Connect(function(teleportState)
+   if autoRejoinEnabled and teleportState == Enum.TeleportState.Failed then
+      print("Disconnected, attempting to rejoin...")
+      TeleportService:Teleport(game.PlaceId, Player)
+   end
+end)
+
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+
+-- Anti-AFK toggle
+local antiAFKEnabled = false
+
+local Toggle = Tab:CreateToggle({
+   Name = "Anti-AFK",
+   CurrentValue = false,
+   Flag = "AntiAFKToggle", -- Unique identifier for saving toggle state
+   Callback = function(Value)
+      antiAFKEnabled = Value
+      if antiAFKEnabled then
+         print("Anti-AFK Enabled")
+      else
+         print("Anti-AFK Disabled")
+      end
+   end,
+})
+
+-- Prevent idle kick
+Player.Idled:Connect(function()
+   if antiAFKEnabled then
+      VirtualUser:CaptureController()
+      VirtualUser:ClickButton2(Vector2.new(0, 0)) -- Simulates right-click
+      print("Prevented AFK kick!")
+   end
+end)
